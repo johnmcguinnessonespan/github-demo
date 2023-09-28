@@ -1,0 +1,159 @@
+package com.esignlive.example;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.file.Files;
+import java.util.Properties;
+
+import javax.net.ssl.HttpsURLConnection;
+
+public class PostmanTransaction
+  {
+  public static final String DOCUMENT_ONE = "/home/john/Documents/OSS/sampleAgreement.pdf";
+//  public static final String PACKAGE_TITLE = "CreatePackage via REST: " + LocalDateTime.now();
+
+  public static void main(String[] args) throws MalformedURLException, IOException
+    {
+	String env = "CA.SBX";  
+    String charset = "UTF-8";
+    File uploadFile1 = new File(DOCUMENT_ONE);
+    String boundary = Long.toHexString(System.currentTimeMillis());
+    String CRLF = "\r\n";
+
+    Properties prop = readPropertiesFile("/home/john/Documents/OSS/config.properties");
+
+    // 1 signer
+    String jsonContent = "{ \"roles\": [{ \"data\": { \"localLanguage\": \"local\" }, \"reassign\": true, \"emailMessage\": { \"content\": \"Transaction for one Signer!\" }, \"id\": \"SignerOne\", \"signers\": [{ \"email\": \"john.cyclist.mcguinness+sOne@gmail.com\", \"firstName\": \"John\", \"lastName\": \"McGuinness\", \"id\": \"SignerOne\" }], \"type\": \"SIGNER\" }], \"documents\": [{ \"approvals\": [{ \"id\": \"ExampleSignatureId\", \"role\": \"SignerOne\", \"fields\": [{ \"page\": 0, \"top\": 200, \"subtype\": \"LABEL\", \"height\": 50, \"left\": 100, \"width\": 200, \"id\": \"myLabelField\", \"type\": \"INPUT\", \"value\": \"Example with input field\" }, { \"page\": 0, \"top\": 100, \"subtype\": \"FULLNAME\", \"height\": 50, \"left\": 100, \"width\": 200, \"type\": \"SIGNATURE\", \"name\": \"ExampleSignatureId\" } ] }], \"name\": \"SignatureDoc\" }], \"name\": \"1 Signer and input transaction\", \"senderVisible\": false, \"due\": \"2024-01-01T14:00:00Z\", \"status\": \"SENT\" }";
+
+    
+//    String jsonContent = "{ \"roles\": [{ \"reassign\": true, \"id\": \"Sender\", \"type\": \"SIGNER\", \"signers\": [{ \"data\": { \"localLanguage\": \"local\" }, \"firstName\": \"John\", \"lastName\": \"SignerOne\", \"email\": \"john.cyclist.mcguinness+signer1@gmail.com\", \"id\": \"SignerOne\" }], \"name\": \"Signer1\" }, { \"reassign\": true, \"id\": \"Signer\", \"type\": \"SIGNER\", \"index\": 0, \"signers\": [{ \"firstName\": \"John\", \"lastName\": \"Signer2\", \"email\": \"john.cyclist.mcguinness+signer2@gmail.com\", \"id\": \"Signer2\" }], \"name\": \"Signer\" }], \"documents\": [{ \"approvals\": [{ \"role\": \"Signer\", \"fields\": [{ \"page\": 0, \"subtype\": \"FULLNAME\", \"width\": 200, \"left\": 175, \"top\": 165, \"height\": 50, \"type\": \"SIGNATURE\" }], \"name\": \"\" }, { \"role\": \"Signer\", \"fields\": [{ \"page\": 0, \"subtype\": \"FULLNAME\", \"width\": 200, \"left\": 550, \"top\": 165, \"height\": 50, \"type\": \"SIGNATURE\" }], \"name\": \"\" }], \"name\": \"sampleAgreement\" }], \"name\": \"2 Senders from Eclippse\", \"type\": \"PACKAGE\", \"status\": \"SENT\" }";
+//    String jsonContent = "{ \"roles\": [{ \"reassign\": true, \"id\": \"Signer1\", \"type\": \"SIGNER\", \"signers\": [{ \"data\": { \"localLanguage\": \"local\" }, \"firstName\": \"John\", \"lastName\": \"SignerOne\", \"email\": \"john.cyclist.mcguinness+signer1@gmail.com\", \"id\": \"SignerOne\" }], \"name\": \"SignerOne\" }, { \"reassign\": true, \"id\": \"Signer2\", \"type\": \"SIGNER\", \"index\": 0, \"signers\": [{ \"firstName\": \"John\", \"lastName\": \"SignerTwo\", \"email\": \"john.cyclist.mcguinness+signer2@gmail.com\", \"id\": \"SignerTwo\" }], \"name\": \"SignerTwo\" }], \"documents\": [{ \"approvals\": [{ \"role\": \"SignerOne\", \"fields\": [{ \"page\": 0, \"subtype\": \"FULLNAME\", \"width\": 200, \"left\": 175, \"top\": 165, \"height\": 50, \"type\": \"SIGNATURE\" }] }, { \"role\": \"SignerTwo\", \"fields\": [{ \"page\": 0, \"subtype\": \"FULLNAME\", \"width\": 200, \"left\": 550, \"top\": 165, \"height\": 50, \"type\": \"SIGNATURE\" }] }], \"name\": \"sampleAgreement\" }], \"name\": \"2 Senders from Eclippse\", \"type\": \"PACKAGE\", \"status\": \"SENT\" }";
+    
+    
+    HttpsURLConnection connection = null;
+    URL url = new URL(prop.getProperty(env +".URL") + "/packages");
+    connection = (HttpsURLConnection) url.openConnection();
+    connection.setDoOutput(true);
+    connection.setDoInput(true);
+    connection.setRequestMethod("POST");
+    connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" +boundary);
+    connection.setRequestProperty("Authorization", "Basic " + prop.getProperty(env +".API"));
+    connection.setRequestProperty("Accept", "application/json; esl-api-version=11.0");
+    OutputStream output = connection.getOutputStream();
+
+    PrintWriter writer = new PrintWriter(new OutputStreamWriter(output, charset), true);
+
+    try
+      {
+      // Add pdf file.
+      writer.append("--" + boundary).append(CRLF);
+      writer.append("Content-Disposition: form-data; name=\"file\"; filename=\"" + uploadFile1.getName() + "\"").append(CRLF);
+      writer.append("Content-Type: " + URLConnection.guessContentTypeFromName(uploadFile1.getName())).append(CRLF);
+      writer.append("Content-Transfer-Encoding: application/pdf").append(CRLF);
+      writer.append(CRLF).flush();
+
+      Files.copy(uploadFile1.toPath(), output);
+      output.flush();
+
+      writer.append(CRLF).flush();
+      // add json payload
+      writer.append("--" + boundary).append(CRLF);
+      writer.append("Content-Disposition: form-data; name=\"payload\"").append(CRLF);
+      writer.append("Content-Type: application/json; charset=" + charset).append(CRLF);
+      writer.append(CRLF).append(jsonContent).append(CRLF).flush();
+      // End of multipart/form-data.
+      writer.append("--" + boundary + "--").append(CRLF).flush();
+      }
+    catch (IOException ex)
+      {
+      System.err.println(ex);
+      }
+
+    // get and write out response code
+    int responseCode = ((HttpURLConnection) connection).getResponseCode();
+    System.out.println(responseCode);
+
+    if(responseCode == 200)
+      {
+      // get and write out response
+      BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+      String inputLine;
+      StringBuffer response = new StringBuffer();
+
+      while ((inputLine = in.readLine()) != null)
+        {
+        response.append(inputLine);
+        }
+
+        in.close();
+
+        System.out.println(response.toString());
+        }
+      else
+        {
+        // get and write out response
+        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
+
+        while ((inputLine = in.readLine()) != null)
+          {
+          response.append(inputLine);
+          }
+
+      in.close();
+
+      System.out.println(response.toString());
+      }
+    }
+  
+  public static Properties readPropertiesFile(String fileName) throws IOException
+    {
+    FileInputStream fis = null;
+    Properties prop = null;
+
+    try
+      {
+      fis = new FileInputStream(fileName);
+      prop = new Properties();
+      prop.load(fis);
+      }
+    catch(FileNotFoundException fnfe)
+      {
+      fnfe.printStackTrace();
+      }
+    catch(IOException ioe)
+      {
+      ioe.printStackTrace();
+      }
+    finally
+      {
+      fis.close();
+      }
+
+    return prop;
+    }
+  }
+
+/* create transaction with 1 owner using en language and having 2 signers both using local language */
+//String jsonContent = "{\"roles\":[{\"locked\":false,\"emailMessage\":{\"content\":\"REST java package\"},\"reassign\":true,\"specialTypes\":[],\"id\":\"Sender\",\"data\":{\"sdk\":\"Java v11.18\",\"localLanguage\":\"local\"},\"type\":\"SIGNER\",\"index\":0,\"signers\":[{\"auth\":{\"challenges\":[],\"scheme\":\"NONE\"},\"company\":\"MC_COMPANY\",\"firstName\":\"John\",\"lastName\":\"Yahoo\",\"phone\":\"07485213049\",\"email\":\"mccyclist@yahoo.com\",\"knowledgeBasedAuthentication\":null,\"language\":\"local\",\"title\":\"MC_TITLE\",\"external\":null,\"professionalIdentityFields\":[],\"userCustomFields\":[],\"delivery\":{\"email\":true,\"provider\":false,\"download\":true},\"group\":null,\"signature\":null,\"address\": null,\"data\":{\"sdk\":\"Java v11.18\",\"localLanguage\":\"local\"},\"name\":\"\",\"specialTypes\":[]}],\"name\":\"Sender\"},{\"locked\":false,\"reassign\":true,\"specialTypes\":[],\"id\":\"Signer\",\"data\":null,\"type\":\"SIGNER\",\"index\":0,\"signers\":[{\"auth\":{\"challenges\":[],\"scheme\":\"NONE\"},\"company\":\"Hotmail\",\"firstName\":\"John\",\"lastName\":\"Hotmail\",\"phone\":\"07485213049\",\"email\":\"mc_cyclist@hotmail.com\",\"knowledgeBasedAuthentication\":null,\"language\":\"local\",\"title\":\"\",\"external\":null,\"professionalIdentityFields\":[],\"userCustomFields\":[],\"delivery\":{\"email\":false,\"provider\":false,\"download\":false},\"group\":null,\"id\":\"Signer\",\"signature\":null,\"address\":null,\"data\":null,\"name\":\"\",\"specialTypes\":[]}],\"name\":\"Signer\"}],\"documents\": [{\"approvals\":[{\"role\":\"Signer\",\"signed\":null,\"accepted\":null,\"data\":null,\"fields\":[{\"page\":0,\"subtype\":\"FULLNAME\",\"width\":200,\"binding\":null,\"extract\":false,\"extractAnchor\":null,\"left\":175,\"top\":165,\"validation\":null,\"height\":50,\"data\":null,\"type\":\"SIGNATURE\",\"value\":\"\"}],\"name\":\"\"},{\"role\":\"Sender\",\"signed\":null,\"accepted\":null,\"data\":null,\"fields\":[{\"page\":0,\"subtype\":\"FULLNAME\",\"width\":200,\"binding\":null,\"extract\":false,\"extractAnchor\":null,\"left\":550,\"top\":165,\"validation\":null,\"height\":50,\"data\":null,\"type\":\"SIGNATURE\",\"value\":\"\"}],\"name\":\"\"}],\"name\": \"sampleAgreement\"}],\"name\": \"2 Senders, local, " + PACKAGE_TITLE + "\", \"type\":\"PACKAGE\", \"language\":\"local\", \"emailMessage\":\"\", \"description\":\"New Package\",\"autoComplete\":true,\"status\":\"SENT\"}";
+/* create transaction with 1 owner using en language and having 2 signers both using en language */
+//String jsonContent = "{\"roles\":[{\"locked\":false,\"emailMessage\":{\"content\":\"REST java package\"},\"attachmentRequirements\":[],\"reassign\":true,\"specialTypes\":[],\"id\":\"Sender\",\"type\":\"SIGNER\",\"index\":0,\"signers\":[{\"auth\":{\"challenges\":[],\"scheme\":\"NONE\"},\"company\":\"Silanis\",\"firstName\":\"" + SIGNER_THREE[0] + "\",\"lastName\":\"" + SIGNER_THREE[1] + "\",\"phone\":\"\",\"email\":\"" + SIGNER_THREE[2] + "\",\"knowledgeBasedAuthentication\":null,\"title\":\"Silanis\",\"external\":null,\"professionalIdentityFields\":[],\"userCustomFields\":[],\"delivery\":{\"email\":true,\"provider\":false,\"download\":true},\"group\":null,\"signature\":null,\"address\":null,\"data\":{\"sdk\":\"Java v11.18\"},\"name\":\"\",\"specialTypes\":[]}],\"name\":\"Sender\"},{\"locked\":false,\"emailMessage\":{\"content\":\"\"},\"attachmentRequirements\":[],\"reassign\":true,\"specialTypes\":[],\"id\":\"Signer\",\"data\":null,\"type\":\"SIGNER\",\"index\":0,\"signers\":[{\"auth\":{\"challenges\":[],\"scheme\":\"NONE\"},\"company\":\"\",\"firstName\":\"" + SIGNER_TWO[0] + "\",\"lastName\":\"" + SIGNER_TWO[1] + "\",\"phone\":\"\",\"email\":\"" + SIGNER_TWO[2] + "\",\"knowledgeBasedAuthentication\":null,\"title\":\"\",\"external\":null,\"professionalIdentityFields\":[],\"userCustomFields\":[],\"delivery\":{\"email\":false,\"provider\":false,\"download\":false},\"group\":null,\"id\":\"Signer\",\"signature\":null,\"address\":null,\"data\":null,\"name\":\"\",\"specialTypes\":[]}],\"name\":\"Signer\"}],\"documents\": [{\"approvals\":[{\"role\":\"Signer\",\"signed\":null,\"accepted\":null,\"data\":null,\"fields\":[{\"page\":0,\"subtype\":\"FULLNAME\",\"width\":200,\"binding\":null,\"extract\":false,\"extractAnchor\":null,\"left\":175,\"top\":165,\"validation\":null,\"height\":50,\"data\":null,\"type\":\"SIGNATURE\",\"value\":\"\"}],\"name\":\"\"},{\"role\":\"Sender\",\"signed\":null,\"accepted\":null,\"data\":null,\"fields\":[{\"page\":0,\"subtype\":\"FULLNAME\",\"width\":200,\"binding\":null,\"extract\":false,\"extractAnchor\":null,\"left\":550,\"top\":165,\"validation\":null,\"height\":50,\"data\":null,\"type\":\"SIGNATURE\",\"value\":\"\"}],\"name\":\"\"}],\"name\": \"sampleAgreement\"}],\"name\": \"2 Senders, local, " + PACKAGE_TITLE + "\", \"type\":\"PACKAGE\", \"emailMessage\":\"\", \"description\":\"New Package\",\"autoComplete\":true,\"status\":\"SENT\"}";
+/* create transaction with 1 owner using en language and having 1 signer who can change Signer */
+//String jsonContent = "{\"roles\":[{\"id\": \"Signer5\", \"reassign\": true, \"type\": \"SIGNER\", \"signers\": [{\"email\": \"john.cyclist.mcguinness+java@gmail.com\", \"firstName\": \"John\", \"lastName\": \"JavaAPI\", \"id\": \"Signer5\"}], \"name\": \"Signer5\"}}";
+
+//String jsonContent = "{\"data\":{\"localLanguage\":\"local\"},\"specialTypes\":[],\"locked\":false,\"id\":\"d26d24d9-2070-4b16-ad1f-abdc520cd3d7\",\"emailMessage\":{\"content\":\"One signer\"},\"reassign\":true,\"attachmentRequirements\":[],\"type\":\"SIGNER\",\"index\":0,\"signers\":[{\"email\":\"john.cyclist.mcguinness+json@gmail.com\",\"company\":\"CompanyNem\",\"firstName\":\"JOHN\",\"lastName\":\"McGUINNESS\",\"professionalIdentityFields\":[],\"userCustomFields\":[],\"delivery\":{ \"email\":false,\"provider\":false,\"download\":false },\"signerType\":\"EXTERNAL_SENDER\",\"auth\":{ \"challenges\":[],\"scheme\":\"NONE\"},\"title\":\"Mr\",\"language\":\"local\",\"specialTypes\":[]}],\"name\":\"Signer1\"}";	
+//String jsonContent = "{ \"roles\": [ { \"data\": { \"localLanguage\": \"local\" }, \"id\": \"SignerOne\", \"signers\": [{ \"email\": \"john.cyclist.mcguinness@gmail.com\", \"firstName\": \"John\", \"lastName\": \"McGuinness\", \"language\": \"local\", \"id\": \"SignerOne\" }], \"name\": \"Signer1\", \"type\": \"SIGNER\", \"index\": 0, \"reassign\": true, \"emailMessage\":{ \"content\":\"Created by JAVA & JSON\" }, \"attachmentRequirements\":[] } ], \"status\": \"SENT\", \"documents\": [{ \"id\": \"documentOne\", \"approvals\": [{ \"role\": \"SignerOne\", \"id\": \"SignatureOne\", \"fields\": [{ \"subtype\": \"FULLNAME\", \"left\": 315, \"height\": 37, \"top\": 216, \"page\": 0, \"type\": \"SIGNATURE\", \"width\": 165 }] }], \"name\": \"SignatureDoc\" }], \"name\": \"one person test API\" }";
+//String jsonContent = "{\"roles\":[{\"locked\":false,\"emailMessage\":{\"content\":\"REST java package\"},\"attachmentRequirements\":[],\"reassign\":true,\"specialTypes\":[],\"id\":\"Sender\",\"type\":\"SIGNER\",\"index\":0,\"signers\":[{\"auth\":{\"challenges\":[],\"scheme\":\"NONE\"},\"company\":\"Silanis\",\"firstName\":\"" + SIGNER_THREE[0] + "\",\"lastName\":\"" + SIGNER_THREE[1] + "\",\"phone\":\"\",\"email\":\"" + SIGNER_THREE[2] + "\",\"knowledgeBasedAuthentication\":null,\"title\":\"Silanis\",\"external\":null,\"professionalIdentityFields\":[],\"userCustomFields\":[],\"delivery\":{\"email\":true,\"provider\":false,\"download\":true},\"group\":null,\"signature\":null,\"address\":null,\"data\":{\"sdk\":\"Java v11.18\"},\"name\":\"\",\"specialTypes\":[]}],\"name\":\"Sender\"},{\"locked\":false,\"emailMessage\":{\"content\":\"\"},\"attachmentRequirements\":[],\"reassign\":true,\"specialTypes\":[],\"id\":\"Signer\",\"data\":null,\"type\":\"SIGNER\",\"index\":0,\"signers\":[{\"auth\":{\"challenges\":[],\"scheme\":\"NONE\"},\"company\":\"\",\"firstName\":\"" + SIGNER_TWO[0] + "\",\"lastName\":\"" + SIGNER_TWO[1] + "\",\"phone\":\"\",\"email\":\"" + SIGNER_TWO[2] + "\",\"knowledgeBasedAuthentication\":null,\"title\":\"\",\"external\":null,\"professionalIdentityFields\":[],\"userCustomFields\":[],\"delivery\":{\"email\":false,\"provider\":false,\"download\":false},\"group\":null,\"id\":\"Signer\",\"signature\":null,\"address\":null,\"data\":null,\"name\":\"\",\"specialTypes\":[]}],\"name\":\"Signer\"}],\"documents\": [{\"approvals\":[{\"role\":\"Signer\",\"signed\":null,\"accepted\":null,\"data\":null,\"fields\":[{\"page\":0,\"subtype\":\"FULLNAME\",\"width\":200,\"binding\":null,\"extract\":false,\"extractAnchor\":null,\"left\":175,\"top\":165,\"validation\":null,\"height\":50,\"data\":null,\"type\":\"SIGNATURE\",\"value\":\"\"}],\"name\":\"\"},{\"role\":\"Sender\",\"signed\":null,\"accepted\":null,\"data\":null,\"fields\":[{\"page\":0,\"subtype\":\"FULLNAME\",\"width\":200,\"binding\":null,\"extract\":false,\"extractAnchor\":null,\"left\":550,\"top\":165,\"validation\":null,\"height\":50,\"data\":null,\"type\":\"SIGNATURE\",\"value\":\"\"}],\"name\":\"\"}],\"name\": \"sampleAgreement\"}],\"name\": \"2 Senders, local, " + PACKAGE_TITLE + "\", \"type\":\"PACKAGE\", \"emailMessage\":\"\", \"description\":\"New Package\",\"autoComplete\":true,\"status\":\"SENT\"}";
+//String jsonContent = "{\"roles\":[{\"id\":\"Owner\",\"signers\": [{\"email\":\"mc_cyclist@oyahoo.co.uk\",\"firstName\":\"John\",\"lastName\":\"mc_cyclist\",\"id\":\"Owner\"}],\"name\":\"Owner\",\"type\":\"SENDER\"},{\"data\":{\"localLanguage\": \"local\"},\"id\":\"SignerOne\",\"signers\":[{\"email\":\"john.cyclist.mcguinness@gmail.com\",\"firstName\":\"John\",\"lastName\": \"McGuinness\",\"language\":\"en\",\"id\":\"SignerOne\"}],\"name\":\"Signer1\",\"type\":\"SIGNER\",\"index\":0}],\"status\":\"SENT\",\"documents\":[{\"id\":\"documentOne\",\"approvals\":[{\"role\":\"SignerOne\",\"id\":\"SignatureOne\",\"fields\":[{\"subtype\":\"FULLNAME\",\"left\":315,\"height\":37,\"top\":216,\"page\":0,\"type\":\"SIGNATURE\",\"width\":165}]}],\"name\":\"SignatureDoc\"}],\"name\":\"Senders: 1, en, " + PACKAGE_TITLE + "\"}";    

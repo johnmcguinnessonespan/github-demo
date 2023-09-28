@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+    <fullyQualifiedTypeName name="com.silanis.esl.sdk.builder.DocumentPackageAttributesBuilder"/>
+    <fullyQualifiedTypeName name="com.silanis.esl.sdk.PackageStatus"/>
+    <fullyQualifiedTypeName name="java.util.List"/>
+    <fullyQualifiedTypeName name="com.google.common.collect.Sets"/>
+    <fullyQualifiedTypeName name="java.util.Properties"/>
+    <fullyQualifiedTypeName name="java.io.FileInputStream"/>
+    <fullyQualifiedTypeName name="java.io.FileNotFoundException"/>
+    <fullyQualifiedTypeName name="com.silanis.esl.api.model.GroupSummary"/>
+    <fullyQualifiedTypeName name="java.util.ArrayList"/>
+    <fullyQualifiedTypeName name="java.util.Map"/>
+    <fullyQualifiedTypeName name="com.silanis.esl.api.model.Sender"/>
+    <fullyQualifiedTypeName name="com.silanis.esl.sdk.Direction"/>
+    <fullyQualifiedTypeName name="com.silanis.esl.sdk.PageRequest"/>
+    <fullyQualifiedTypeName name="com.silanis.esl.sdk.builder.SignerBuilder"/>
+    <fullyQualifiedTypeName name="com.silanis.esl.sdk.builder.PackageBuilder"/>
+    <fullyQualifiedTypeName name="com.silanis.esl.sdk.builder.SignatureBuilder"/>
+    <fullyQualifiedTypeName name="com.silanis.esl.sdk.builder.TextAnchorBuilder"/>
+    <fullyQualifiedTypeName name="com.silanis.esl.sdk.builder.DocumentBuilder"/>
+    <fullyQualifiedTypeName name="com.silanis.esl.sdk.DocumentPackage"/>
+    <fullyQualifiedTypeName name="com.silanis.esl.sdk.PackageId"/>
+    <fullyQualifiedTypeName name="java.io.IOException"/>
+    <fullyQualifiedTypeName name="com.silanis.esl.sdk.TextAnchorPosition"/>
+    <fullyQualifiedTypeName name="com.silanis.esl.sdk.internal.EslServerException"/>
+    <fullyQualifiedTypeName name="com.silanis.esl.sdk.EslException"/>
+    <fullyQualifiedTypeName name="com.silanis.esl.sdk.ExtractionType"/>
+</qualifiedTypeNameHistroy>

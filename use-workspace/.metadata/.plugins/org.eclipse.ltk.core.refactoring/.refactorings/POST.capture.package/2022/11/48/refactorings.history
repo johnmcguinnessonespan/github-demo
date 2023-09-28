@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring accessors="true" comment="Delete element from project &apos;POST.capture.package&apos;&#x0A;- Original project: &apos;POST.capture.package&apos;&#x0A;- Original element: &apos;POST.capture.package/src/esignlive.example.com&apos;" description="Delete element" element1="/src&lt;esignlive.example.com" element2="/src&lt;esignlive.example" element3="/src&lt;esignlive" elements="3" flags="589830" id="org.eclipse.jdt.ui.delete" resources="0" stamp="1669739004655" subPackages="false" version="1.0"/>
+</session>

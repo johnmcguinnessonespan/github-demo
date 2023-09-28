@@ -1,0 +1,92 @@
+package com.esignlive.example;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Properties;
+
+import com.silanis.esl.sdk.DocumentPackage;
+import com.silanis.esl.sdk.EslClient;
+import com.silanis.esl.sdk.ExtractionType;
+import com.silanis.esl.sdk.PackageId;
+//import com.silanis.esl.sdk.PackageStatus;
+import com.silanis.esl.sdk.builder.DocumentBuilder;
+import com.silanis.esl.sdk.builder.DocumentPackageSettingsBuilder;
+import com.silanis.esl.sdk.builder.PackageBuilder;
+import com.silanis.esl.sdk.builder.SignerBuilder;
+
+public class WordPackage
+  {
+  public static final String DOCUMENT_ONE = "/home/john/Documents/OSS/sample_contract_text_tags.docx";
+  public static final String PACKAGE_TITLE = "WordPackage Title";
+//  static { System.setProperty("java.util.logging.config.file", "./sources/logging.properties"); }
+
+  public static void main(String[] args) throws IOException
+    {
+	String env = "EU.PROD";
+    Properties prop = readPropertiesFile("/home/john/Documents/OSS/config.properties");
+		    
+    EslClient eslClient = new EslClient(prop.getProperty(env + ".API"), prop.getProperty(env + ".URL"));
+
+    DocumentPackage pkg = PackageBuilder.newPackageNamed(PACKAGE_TITLE)
+        .withSettings(DocumentPackageSettingsBuilder.newDocumentPackageSettings()
+            .withDefaultTimeBasedExpiry()
+            .withRemainingDays(1)
+            )
+//        pkg = PackageBuilder.NewPackageNamed(su.SignTransactionName.Trim())
+//        .WithSigner(SignerBuilder.NewSignerWithEmail(su.SignEmail1.Trim())
+//        .WithFirstName(su.SignFirstName1.Trim())
+//        .WithLastName(su.SignLastName1.Trim()))
+//        .WithDocument(DocumentBuilder.NewDocumentNamed(su.SignFileName.Trim())
+//        .FromFile(inputfile)
+//        .EnableExtraction()
+//        .WithExtractionType(ExtractionType.TEXT_TAGS))
+//        .WithAttributes(new DocumentPackageAttributesBuilder().WithAttribute("senderVisible", false).Build())
+//        .Build();
+    
+        .withSigner(SignerBuilder.newSignerWithEmail("mc_cyclist@hotmail.com")
+            .withFirstName("John")
+            .withLastName("Hotmail")
+            .withCustomId("Signer1")
+            )
+        .withDocument(DocumentBuilder.newDocumentWithName("Using Text Tags")
+            .fromFile(DOCUMENT_ONE)
+            .enableExtraction()
+            .withExtractionType(ExtractionType.TEXT_TAGS)
+            )
+        .autocomplete(false)
+        .withEmailMessage("Created with eclipse and java")
+        .build();
+
+    PackageId packageId = eslClient.createAndSendPackage(pkg);
+
+    System.out.println("{\n" + packageId + "\n}");
+    }
+  
+  public static Properties readPropertiesFile(String fileName) throws IOException
+    {
+    FileInputStream fis = null;
+    Properties prop = null;
+
+    try
+      {
+      fis = new FileInputStream(fileName);
+      prop = new Properties();
+      prop.load(fis);
+      }
+    catch(FileNotFoundException fnfe)
+      {
+      fnfe.printStackTrace();
+      }
+    catch(IOException ioe)
+      {
+      ioe.printStackTrace();
+      }
+    finally
+      {
+      fis.close();
+      }
+
+    return prop;
+	}
+  }
